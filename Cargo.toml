@@ -1,5 +1,5 @@
 [package]
-name = "hyperfetch"
+name = "fetch"
 version = "0.1.3"
 edition = "2024"
 authors = ["Tarush Mohindru <tarushmohindru1515@gmail.com>"]

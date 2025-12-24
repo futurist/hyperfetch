@@ -1,6 +1,6 @@
 use clap::Parser;
 use console::style;
-use hyperfetch::{
+use fetch::{
     cli::Cli,
     downloader::Downloader,
     models::{DownloadConfig, DownloadProgress},
