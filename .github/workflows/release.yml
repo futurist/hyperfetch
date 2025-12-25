@@ -26,9 +26,11 @@ jobs:
       matrix:
         include:
           - os: ubuntu-latest
-            bin_path: target/release/hyperfetch
+            bin_path: target/release/fetch
           - os: windows-latest
-            bin_path: target/release/hyperfetch.exe
+            bin_path: target/release/fetch.exe
+          - os: macos-latest
+            bin_path: target/release/fetch
 
     steps:
       - name: Resolve tag/ref
