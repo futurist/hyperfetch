@@ -1,5 +1,5 @@
 use crate::{
-    CONNECTION_TIMEOUT, MAX_CHUNK_SIZE, MIN_CHUNK_SIZE, READ_TIMEOUT, SPEED_SAMPLE_INTERVAL,
+    MAX_CHUNK_SIZE, MIN_CHUNK_SIZE, READ_TIMEOUT, SPEED_SAMPLE_INTERVAL,
     models::{ChunkCompleted, ChunkInfo, DownloadConfig, DownloadProgress},
 };
 use reqwest::{
@@ -42,7 +42,7 @@ impl Downloader {
         }
 
         let client = Client::builder()
-            .timeout(CONNECTION_TIMEOUT)
+            .timeout(config.timeout)
             .read_timeout(READ_TIMEOUT)
             .default_headers(headers)
             .user_agent(&config.user_agent)

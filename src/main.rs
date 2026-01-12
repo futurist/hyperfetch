@@ -29,13 +29,13 @@ async fn main() -> Result<(), anyhow::Error> {
         for header in header_values {
             if let Some((name, value)) = header.split_once(":") {
                 headers.insert(name.trim().to_string(), value.trim().to_string());
+            } else {
+                eprintln!("Warning: Malformed header ignored (missing ':'): {}", header);
             }
         }
     }
 
     let retry_attempts = cli.retries;
-
-    let _timeout_secs = cli.timeout;
 
     let mut config = DownloadConfig {
         max_connections,
@@ -45,20 +45,21 @@ async fn main() -> Result<(), anyhow::Error> {
         retry_delay: Duration::from_secs(1),
         resume_support: !cli.no_resume,
         adaptive_chunking: !cli.no_adaptive,
+        timeout: Duration::from_secs(cli.timeout),
         ..Default::default()
     };
 
     if let Some(user_agent) = cli.user_agent {
-        config.user_agent = user_agent.clone();
+        config.user_agent = user_agent;
     }
 
-    let quite = cli.quiet;
+    let quiet = cli.quiet;
     let verbose = cli.verbose;
 
     let downloader = Downloader::new(config);
 
     if verbose {
-        println!("{}", style("Dart Downloader").bold().cyan());
+        println!("{}", style("Hyperfetch").bold().cyan());
         println!("URL: {}", url);
         println!("Output: {}", output_path);
         println!("Max connections: {}", max_connections);
@@ -68,7 +69,7 @@ async fn main() -> Result<(), anyhow::Error> {
         println!();
     }
 
-    let progress_bar = if !quite {
+    let progress_bar = if !quiet {
         let pb = ProgressBar::new(0);
         pb.set_style(
             ProgressStyle::default_bar().
@@ -144,36 +145,44 @@ async fn main() -> Result<(), anyhow::Error> {
 
             let path = Path::new(&output_path);
             if path.extension().is_none() {
-                println!(
-                    "DEBUG: Filename '{}' has no extension. Attempting to infer type from content...",
-                    output_path
-                );
-            }
-            match infer::get_from_path(&output_path) {
-                Ok(Some(kind)) => {
-                    let extension = kind.extension();
-                    let new_path = format!("{}.{}", output_path, extension);
-                    if fs::rename(output_path, &new_path).is_ok() {
-                        final_path = new_path;
-                        println!("DEBUG: Renamed file to '{}'", final_path);
-                    } else {
-                        eprintln!("DEBUG: Error: Failed to rename the file.");
-                    }
-                }
-                Ok(None) => {
+                if verbose && !quiet {
                     println!(
-                        "DEBUG: Could not infer the file type. The format is unknown or not supported by 'infer'."
+                        "DEBUG: Filename '{}' has no extension. Attempting to infer type from content...",
+                        output_path
                     );
                 }
-                Err(e) => {
-                    eprintln!(
-                        "DEBUG: An error occurred while trying to read the file for inference: {}",
-                        e
-                    );
+                match infer::get_from_path(&output_path) {
+                    Ok(Some(kind)) => {
+                        let extension = kind.extension();
+                        let new_path = format!("{}.{}", output_path, extension);
+                        if fs::rename(output_path, &new_path).is_ok() {
+                            final_path = new_path;
+                            if verbose && !quiet {
+                                println!("DEBUG: Renamed file to '{}'", final_path);
+                            }
+                        } else if verbose && !quiet {
+                            eprintln!("DEBUG: Error: Failed to rename the file.");
+                        }
+                    }
+                    Ok(None) => {
+                        if verbose && !quiet {
+                            println!(
+                                "DEBUG: Could not infer the file type. The format is unknown or not supported by 'infer'."
+                            );
+                        }
+                    }
+                    Err(e) => {
+                        if verbose && !quiet {
+                            eprintln!(
+                                "DEBUG: An error occurred while trying to read the file for inference: {}",
+                                e
+                            );
+                        }
+                    }
                 }
             }
 
-            if !quite {
+            if !quiet {
                 println!();
                 println!(
                     "{}",
@@ -189,7 +198,7 @@ async fn main() -> Result<(), anyhow::Error> {
             }
         }
         Err(e) => {
-            if !quite {
+            if !quiet {
                 println!();
                 eprintln!("{} {}", style("Error:").red().bold(), e);
             }

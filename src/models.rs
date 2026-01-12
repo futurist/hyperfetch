@@ -1,6 +1,6 @@
 use std::{collections::HashMap, time::Duration};
 
-use crate::{DEFAULT_CHUNK_SIZE, MAX_CONNECTIONS};
+use crate::{CONNECTION_TIMEOUT, DEFAULT_CHUNK_SIZE, MAX_CONNECTIONS};
 
 #[derive(Debug, Clone)]
 pub struct DownloadProgress {
@@ -25,6 +25,7 @@ pub struct DownloadConfig {
     pub resume_support: bool,
     pub connection_reuse: bool,
     pub compression: bool,
+    pub timeout: Duration,
 }
 
 impl Default for DownloadConfig {
@@ -48,6 +49,7 @@ impl Default for DownloadConfig {
             resume_support: true,
             connection_reuse: true,
             compression: true,
+            timeout: CONNECTION_TIMEOUT,
         }
     }
 }
